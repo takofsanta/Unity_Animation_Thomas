@@ -20,6 +20,8 @@ public class IAController : MonoBehaviour
     private IAState _state = IAState.None;
     [SerializeField] Animator _animator;
     public bool PlayerNear = false;
+    public bool PlayerSeen = false;
+    public bool Win = false;
 
     [SerializeField] private NavMeshAgent _agent;
     [SerializeField] private GameObject _waypoint;
@@ -55,11 +57,34 @@ public class IAController : MonoBehaviour
             case IAState.None:
                 break;
             case IAState.Idle:
+                if (_animator.speed > 0)
+                {
+                    _state = IAState.Patrol;
+                }
+                else if (PlayerSeen)
+                {
+                    _state = IAState.PlayerSeen;
+                    _animator.SetBool("IsSeeing", true);
+                }
                 break;
             case IAState.Patrol:
+                if (_animator.speed <= 0)
+                {
+                    _state = IAState.Idle;
+                }
+                else if (PlayerSeen)
+                {
+                    _state = IAState.PlayerSeen;
+                    _animator.SetBool("IsSeeing", true);
+                }
                 break;
             case IAState.PlayerSeen:
-                if (PlayerNear)
+                if (!PlayerSeen)
+                {
+                    _state = IAState.Idle;
+                    _animator.SetBool("IsSeeing", false);
+                }
+                else if (PlayerNear)
                 {
                     _state = IAState.PlayerNear;
                     _animator.SetBool("IsClose", true);
@@ -71,8 +96,18 @@ public class IAController : MonoBehaviour
                     _state = IAState.PlayerSeen;
                     _animator.SetBool("IsClose", false);
                 }
+                else if (Win)
+                {
+                    _state = IAState.Win;
+                    _animator.SetBool("PlayerDead", true);
+                }
                 break;
             case IAState.Win:
+                if (!Win)
+                {
+                    _state = IAState.PlayerNear;
+                    _animator.SetBool("PlayerDead", false);
+                }
                 break;
         }
     }
